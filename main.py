@@ -212,4 +212,5 @@ async def serve_static_files(filename):
     return await send_from_directory('public', filename)
 
 if __name__ == "__main__":
-    app.run(port=port)
+    app.run(host="0.0.0.0", port=port)
+
