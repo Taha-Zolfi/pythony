@@ -15,7 +15,6 @@ port = 3000
 # Your Telegram API credentials
 API_ID = 23787541
 API_HASH = "fc1f17f7d2e81b0ad904228f002c01c9"
-DATA_FILE_PATH = "public/data.xlsx"
 
 client = None
 phone_number = None
@@ -120,6 +119,8 @@ async def authenticate():
               <input type="file" id="imagePath" name="imagePath" accept="image/*"><br><br>
               <label for="filePath">فایل:</label>
               <input type="file" id="filePath" name="filePath"><br><br>
+              <label for="excelFile">فایل اکسل:</label>
+              <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required><br><br>
               <input type="submit" value="ارسال">
             </form>
           </div>
@@ -137,16 +138,19 @@ async def send_message():
     message = form["message"]
     image_file = (await request.files).get("imagePath")
     file_file = (await request.files).get("filePath")
+    excel_file = (await request.files).get("excelFile")
 
     image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(image_file.filename)) if image_file else None
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file_file.filename)) if file_file else None
+    excel_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(excel_file.filename))
 
     if image_path:
         await image_file.save(image_path)
     if file_path:
         await file_file.save(file_path)
+    await excel_file.save(excel_path)
 
-    target_phone_numbers = load_phone_numbers(DATA_FILE_PATH)
+    target_phone_numbers = load_phone_numbers(excel_path)
     logs = ""
 
     try:
@@ -185,6 +189,7 @@ async def send_message():
             os.remove(image_path)
         if file_path:
             os.remove(file_path)
+        os.remove(excel_path)
 
         return await render_template_string(f'''
         <!DOCTYPE html>
@@ -213,4 +218,3 @@ async def serve_static_files(filename):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port)
-
